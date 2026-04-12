@@ -1,0 +1,21 @@
+[workspace]
+resolver = "2"
+members = [
+    "ytdlp-proto",
+    "ytdlp-server",
+    "ytdlp-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "Unlicense"
+authors = ["yt-dlp project"]
+repository = "https://github.com/yt-dlp/yt-dlp"
+
+[workspace.dependencies]
+tokio = { version = "1", features = ["full"] }
+tonic = "0.12"
+prost = "0.13"
+tracing = "0.1"
+anyhow = "1"

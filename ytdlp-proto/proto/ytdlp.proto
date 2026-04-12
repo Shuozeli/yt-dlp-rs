@@ -1,0 +1,118 @@
+syntax = "proto3";
+
+package ytdlp;
+
+service YtDlp {
+  // Extract video info (metadata, formats, subtitles, etc.)
+  rpc Extract(ExtractRequest) returns (ExtractResponse);
+
+  // Download video/audio
+  rpc Download(DownloadRequest) returns (stream DownloadResponse);
+
+  // Get supported sites list
+  rpc ListSupportedSites(ListRequest) returns (ListResponse);
+
+  // Health check
+  rpc Health(HealthRequest) returns (HealthResponse);
+}
+
+message ExtractRequest {
+  string url = 1;
+  // Optional: requested info to extract (formats, subtitles, etc.)
+  repeated string info_fields = 2;
+  // Optional: extractor-specific options
+  map<string, string> extractor_opts = 3;
+}
+
+message VideoInfo {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  string uploader = 4;
+  string uploader_url = 5;
+  int64 duration = 6;
+  map<string, string> metadata = 7;
+  repeated Format formats = 8;
+  repeated Subtitle subtitles = 9;
+  repeated Thumbnail thumbnails = 10;
+}
+
+message Format {
+  string format_id = 1;
+  string ext = 2;
+  string resolution = 3;
+  int64 filesize = 4;
+  string vcodec = 5;
+  string acodec = 6;
+  int64 fps = 7;
+  string tbr = 8;
+  string protocol = 9;
+}
+
+message Subtitle {
+  string lang = 1;
+  string ext = 2;
+  repeated SubtitleEntry entries = 3;
+}
+
+message SubtitleEntry {
+  string start = 1;
+  string end = 2;
+  string text = 3;
+}
+
+message Thumbnail {
+  string url = 1;
+  int64 width = 2;
+  int64 height = 3;
+}
+
+message ExtractResponse {
+  VideoInfo video = 1;
+}
+
+message DownloadRequest {
+  string url = 1;
+  string format_id = 2;
+  string output_path = 3;
+  // Progress callback interval in bytes
+  int64 progress_interval = 4;
+}
+
+message DownloadResponse {
+  oneof event {
+    Progress progress = 1;
+    Completed completed = 2;
+    Error error = 3;
+  }
+}
+
+message Progress {
+  int64 downloaded_bytes = 1;
+  int64 total_bytes = 2;
+  float speed = 3;
+  float eta = 4;
+}
+
+message Completed {
+  string output_path = 1;
+  int64 total_bytes = 2;
+}
+
+message DownloadError {
+  string code = 1;
+  string message = 2;
+}
+
+message ListRequest {}
+
+message ListResponse {
+  repeated string supported_sites = 1;
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  bool healthy = 1;
+  string version = 2;
+}

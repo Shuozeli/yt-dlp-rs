@@ -1,0 +1,16 @@
+[package]
+name = "ytdlp-server"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "ytdlp-server"
+path = "src/main.rs"
+
+[dependencies]
+ytdlp-proto = { path = "../ytdlp-proto" }
+tokio = { workspace = true }
+tonic = { workspace = true }
+prost = { workspace = true }
+tracing = { workspace = true }
+anyhow = { workspace = true }

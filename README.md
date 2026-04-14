@@ -17,9 +17,18 @@ A Rust gRPC server and CLI for video downloading and information extraction, ins
 - **ytdlp-server**: gRPC server with yt-dlp subprocess for extraction
 - **ytdlp-cli**: CLI client that communicates with the server (no yt-dlp needed locally)
 
-## Quick Start with Docker
+## Prerequisites
 
-### 1. Start the server
+- **Docker** and **Docker Compose** (for server deployment)
+- **Rust 1.94+** (for building from source or CLI)
+- **yt-dlp** (only needed if running server without Docker)
+- **FFmpeg** (only needed if running server without Docker)
+
+## Setup
+
+### Option A: Docker (Recommended)
+
+**1. Clone and start the server:**
 
 ```bash
 git clone https://github.com/Shuozeli/yt-dlp-rs.git
@@ -27,56 +36,122 @@ cd yt-dlp-rs
 docker compose up -d
 ```
 
-The server runs on port 50053. To change the port:
-
-```bash
-YT_DLP_SERVER_PORT=50054 docker compose up -d
-```
-
-### 2. Install the CLI
+**2. Install the CLI:**
 
 ```bash
 cargo install --git https://github.com/Shuozeli/yt-dlp-rs --bin ytdlp-cli
 ```
 
-### 3. Use the CLI
+**3. Configure CLI to connect to server:**
 
 ```bash
-# Set server address (or use --server flag)
 export YT_DLP_SERVER=http://localhost:50053
-
-# Extract video info
-ytdlp info "https://www.youtube.com/watch?v=..."
-
-# List formats
-ytdlp info -F "https://www.youtube.com/watch?v=..."
-
-# Download a video
-ytdlp download "https://www.youtube.com/watch?v=..."
-
-# List supported sites
-ytdlp sites
-
-# Check server health
-ytdlp health
 ```
 
-## Development
-
-### Building from source
+Or use the `--server` flag with every command:
 
 ```bash
-# Build all crates
-cargo build --release
-
-# Run the server
-cargo run --release -p ytdlp-server
-
-# Run the CLI (connects to localhost:50053 by default)
-cargo run --release -p ytdlp-cli -- info -u "https://www.youtube.com/watch?v=..."
+ytdlp --server http://localhost:50053 info "https://youtube.com/watch?v=..."
 ```
 
-### Project structure
+### Option B: Local Development
+
+**1. Install dependencies:**
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install yt-dlp ffmpeg protobuf-compiler
+
+# macOS
+brew install yt-dlp ffmpeg protobuf
+```
+
+**2. Clone and build:**
+
+```bash
+git clone https://github.com/Shuozeli/yt-dlp-rs.git
+cd yt-dlp-rs
+cargo build --release
+```
+
+**3. Run the server:**
+
+```bash
+cargo run --release -p ytdlp-server
+```
+
+**4. In another terminal, run the CLI:**
+
+```bash
+cargo run --release -p ytdlp-cli -- info "https://youtube.com/watch?v=..."
+```
+
+## Usage
+
+### Extract video information
+
+```bash
+ytdlp info "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+```
+
+### List available formats
+
+```bash
+ytdlp info -F "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+```
+
+### Download a video
+
+```bash
+ytdlp download "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+```
+
+### Download with specific format
+
+```bash
+ytdlp download "https://www.youtube.com/watch?v=dQw4w9WgXcQ" --format bestvideo+bestaudio
+```
+
+### List subtitles
+
+```bash
+ytdlp transcript "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+```
+
+### Download subtitles
+
+```bash
+ytdlp download-subs "https://www.youtube.com/watch?v=dQw4w9WgXcQ" --lang en --output subtitles.vtt
+```
+
+### Other commands
+
+```bash
+ytdlp sites              # List supported sites
+ytdlp health              # Check server health
+ytdlp config --show-path  # Show config file location
+```
+
+## Configuration
+
+The CLI reads from `~/.config/ytdlp-rs.toml`:
+
+```toml
+output_template = "%(title)s-%(id)s.%(ext)s"
+retries = 10
+rate_limit = "5M"        # Optional: e.g., "1M" for 1 MB/s
+proxy = ""                # Optional: proxy URL
+user_agent = ""          # Optional: custom user agent
+```
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `YT_DLP_SERVER` | `http://127.0.0.1:50053` | Server address |
+| `RUST_LOG` | `info` | Logging level |
+
+## Project Structure
 
 | Directory | Description |
 |-----------|-------------|

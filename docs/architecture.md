@@ -5,21 +5,10 @@
 yt-dlp-rs is a Rust gRPC server + CLI for video downloading, inspired by yt-dlp.
 
 ```
-┌─────────────────┐     ┌──────────────────────┐
-│     ytdlp-cli   │────▶│     ytdlp-server     │
-└─────────────────┘     └──────────────────────┘
-                               │
-                               ▼
-                        ┌──────────────────────┐
-                        │  yt-dlp subprocess    │
-                        │ (handles JS challenges│
-                        │  via --remote-components)
-                        └──────────────────────┘
-                               │
-                               ▼ (submodule)
-                        ┌──────────────────────┐
-                        │  thirdparties/yt-dlp │
-                        └──────────────────────┘
+┌──────────────┐     gRPC      ┌─────────────────┐     subprocess     ┌────────────┐
+│   CLI Client │ ───────────► │  ytdlp-server   │ ─────────────────► │   yt-dlp   │
+│  (any host)  │              │   (Docker)       │                    │  (inside)  │
+└──────────────┘              └─────────────────┘                    └────────────┘
 ```
 
 ## Crates
@@ -34,7 +23,6 @@ yt-dlp-rs is a Rust gRPC server + CLI for video downloading, inspired by yt-dlp.
 | `ytdlp-downloader` | HTTP/HTTPS/HLS/DASH downloader (reqwest-based) |
 | `ytdlp-net` | HTTP networking utilities |
 | `ytdlp-postproc` | Post-processing: ffmpeg-based merger, embedder, subtitles converter |
-| `thirdparties/yt-dlp` | yt-dlp git submodule for extraction |
 
 ## gRPC Service
 

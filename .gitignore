@@ -1,3 +1,10 @@
 /target
 **/*.rs.bk
 Cargo.lock
+
+# Coverage reports
+lcov.info
+tarpaulin-report.html
+
+# Private scripts (not distributed)
+private/

@@ -9,8 +9,14 @@ path = "src/main.rs"
 
 [dependencies]
 ytdlp-proto = { path = "../ytdlp-proto" }
+ytdlp-extractors = { path = "../ytdlp-extractors" }
+ytdlp-extractor = { path = "../ytdlp-extractor" }
+ytdlp-net = { path = "../ytdlp-net" }
+ytdlp-downloader = { path = "../ytdlp-downloader" }
 tokio = { workspace = true }
+tokio-stream = "0.1"
 tonic = { workspace = true }
 prost = { workspace = true }
 tracing = { workspace = true }
 anyhow = { workspace = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

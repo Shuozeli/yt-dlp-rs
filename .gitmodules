@@ -1,0 +1,6 @@
+[submodule "thirdparties/yt-dlp"]
+	path = thirdparties/yt-dlp
+	url = https://github.com/yt-dlp/yt-dlp.git
+[submodule ".claude/rules/shared"]
+	path = .claude/rules/shared
+	url = https://github.com/shuozeli/claude-rules.git

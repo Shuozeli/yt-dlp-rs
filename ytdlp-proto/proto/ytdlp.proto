@@ -9,6 +9,12 @@ service YtDlp {
   // Download video/audio
   rpc Download(DownloadRequest) returns (stream DownloadResponse);
 
+  // List available subtitles for a video
+  rpc ListSubtitles(ListSubtitlesRequest) returns (ListSubtitlesResponse);
+
+  // Download subtitles to a file
+  rpc DownloadSubtitles(DownloadSubtitlesRequest) returns (DownloadSubtitlesResponse);
+
   // Get supported sites list
   rpc ListSupportedSites(ListRequest) returns (ListResponse);
 
@@ -47,6 +53,7 @@ message Format {
   int64 fps = 7;
   string tbr = 8;
   string protocol = 9;
+  string url = 10;
 }
 
 message Subtitle {
@@ -77,13 +84,21 @@ message DownloadRequest {
   string output_path = 3;
   // Progress callback interval in bytes
   int64 progress_interval = 4;
+  // Direct download URL (optional, skips extraction if provided)
+  string download_url = 5;
+  // Download options
+  int32 retries = 6;
+  string rate_limit = 7;
+  string proxy = 8;
+  string user_agent = 9;
+  bool continue_download = 10;
 }
 
 message DownloadResponse {
   oneof event {
     Progress progress = 1;
     Completed completed = 2;
-    Error error = 3;
+    DownloadError error = 3;
   }
 }
 
@@ -101,7 +116,7 @@ message Completed {
 
 message DownloadError {
   string code = 1;
-  string message = 2;
+  string error_message = 2;
 }
 
 message ListRequest {}
@@ -115,4 +130,36 @@ message HealthRequest {}
 message HealthResponse {
   bool healthy = 1;
   string version = 2;
+}
+
+message ListSubtitlesRequest {
+  string url = 1;
+  // Optional: specific language codes (e.g., "en", "en,de")
+  string lang = 2;
+}
+
+message ListSubtitlesResponse {
+  repeated SubtitleInfo subtitles = 1;
+}
+
+message SubtitleInfo {
+  string lang = 1;
+  string lang_name = 2;
+  string ext = 3;
+  bool is_auto = 4;
+}
+
+message DownloadSubtitlesRequest {
+  string url = 1;
+  string lang = 2;
+  string output_path = 3;
+  // Output format: "vtt", "srt", "json3", etc.
+  string format = 4;
+}
+
+message DownloadSubtitlesResponse {
+  bool success = 1;
+  string output_path = 2;
+  int64 file_size = 3;
+  string error = 4;
 }

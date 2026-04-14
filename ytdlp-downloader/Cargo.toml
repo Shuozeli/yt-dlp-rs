@@ -1,0 +1,16 @@
+[package]
+name = "ytdlp-downloader"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+tokio = { workspace = true }
+reqwest = { workspace = true }
+async-trait = { workspace = true }
+hls_m3u8 = { workspace = true }
+quick-xml = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+tokio-test = "0.4"

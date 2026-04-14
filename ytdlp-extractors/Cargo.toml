@@ -1,0 +1,19 @@
+[package]
+name = "ytdlp-extractors"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ytdlp-extractor = { path = "../ytdlp-extractor" }
+ytdlp-net = { path = "../ytdlp-net" }
+tokio = { workspace = true }
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+tracing = { workspace = true }
+regex = "1"
+url = { workspace = true }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[dev-dependencies]
+tokio-test = "0.4"

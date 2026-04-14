@@ -1,0 +1,40 @@
+# =============================================================================
+# yt-dlp-rs Docker Compose
+#
+# Usage:
+#   docker compose up -d        # Start server in background
+#   docker compose logs -f      # View logs
+#   docker compose down         # Stop server
+#
+# Environment variables:
+#   YT_DLP_SERVER_PORT - Server port (default: 50053)
+#   RUST_LOG            - Logging level (default: info)
+# =============================================================================
+
+services:
+  ytdlp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: shuozeli/ytdlp-rs:latest
+    container_name: ytdlp-server
+    restart: unless-stopped
+    ports:
+      - "${YT_DLP_SERVER_PORT:-50053}:50053"
+    environment:
+      - RUST_LOG=${RUST_LOG:-info}
+    volumes:
+      # Optional: mount a download directory
+      - ./downloads:/app/downloads:rw
+      # Optional: mount custom config
+      # - ./config:/app/config:ro
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "50053"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 2G

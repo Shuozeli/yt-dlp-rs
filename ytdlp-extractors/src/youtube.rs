@@ -361,13 +361,13 @@ fn pick_vtt(variants: &[YtDlpSubtitleVariant]) -> Option<&YtDlpSubtitleVariant> 
 /// For YouTube auto-captions and manual-upload VTTs that's enough.
 fn parse_vtt(content: &str) -> Vec<SubtitleEntry> {
     let mut entries = Vec::new();
-    let mut lines = content.lines().peekable();
+    let mut lines = content.lines();
     while let Some(line) = lines.next() {
         let Some((start, end)) = parse_vtt_timing(line) else {
             continue;
         };
         let mut text_lines: Vec<String> = Vec::new();
-        while let Some(text_line) = lines.next() {
+        for text_line in lines.by_ref() {
             if text_line.trim().is_empty() {
                 break;
             }
@@ -389,11 +389,7 @@ fn parse_vtt_timing(line: &str) -> Option<(String, String)> {
     // After `-->` an optional cue settings string can follow the end
     // timestamp (e.g. `00:00:03.000 line:90% align:start`); take only
     // the first whitespace-delimited token.
-    let end = end_part
-        .split_whitespace()
-        .next()
-        .unwrap_or("")
-        .to_string();
+    let end = end_part.split_whitespace().next().unwrap_or("").to_string();
     if start.is_empty() || end.is_empty() {
         return None;
     }

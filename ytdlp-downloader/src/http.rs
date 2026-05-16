@@ -17,7 +17,13 @@ impl HttpDownloader {
     }
 
     pub fn with_options(options: &DownloadOptions) -> anyhow::Result<Self> {
-        let mut builder = Client::builder().timeout(Duration::from_secs(300));
+        // 30-minute request timeout. At YouTube's per-connection anonymous
+        // throttle (~30 KB/s in mid-2026) a 15 MB m4a takes ~7-8 minutes,
+        // and 50 MB combined formats can need 25+ minutes. The previous
+        // 300-second cap killed every download larger than ~9 MB before
+        // it finished, surfacing as `failed to read chunk` from
+        // `response.chunk().await` below.
+        let mut builder = Client::builder().timeout(Duration::from_secs(1800));
 
         // Apply proxy if specified
         if !options.proxy.is_empty() {

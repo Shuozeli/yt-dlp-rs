@@ -3,7 +3,7 @@ use async_trait::async_trait;
 use reqwest::{Client, Proxy};
 use std::path::Path;
 use std::time::{Duration, Instant};
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncSeekExt, AsyncWriteExt};
 
 use super::downloader::{DownloadOptions, DownloadResult, Downloader, Progress};
 
@@ -100,6 +100,19 @@ impl Downloader for HttpDownloader {
                     e
                 )
             })?;
+
+        // CRITICAL: when resuming, seek to the end of the existing partial
+        // file before writing. `write(true)` (without `append(true)`) leaves
+        // the cursor at byte 0, so without this seek the first chunk of the
+        // resume payload OVERWRITES the start of the existing file --
+        // producing a corrupted output whose bytes are scrambled. The
+        // observed downstream symptom for m4a is `moov atom not found` and
+        // `Invalid data found when processing input` during ffmpeg decode.
+        if let Some(size) = existing_size {
+            file.seek(std::io::SeekFrom::Start(size))
+                .await
+                .context("failed to seek to resume offset")?;
+        }
 
         let mut downloaded = existing_size.unwrap_or(0);
 

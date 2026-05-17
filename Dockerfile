@@ -3,7 +3,12 @@
 # =============================================================================
 # Stage 1: Build the yt-dlp-rs server
 # =============================================================================
-FROM --platform=$BUILDPLATFORM rust:1.94 AS builder
+# Pin to bookworm to match the runtime stage's debian:bookworm-slim
+# (glibc 2.36). The unpinned `rust:1.94` tag follows debian:trixie which
+# links the server against glibc 2.39, producing
+# `/lib/x86_64-linux-gnu/libc.so.6: version 'GLIBC_2.39' not found` at
+# container start on the runtime image.
+FROM --platform=$BUILDPLATFORM rust:1.94-bookworm AS builder
 
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
@@ -16,26 +21,19 @@ RUN case "$TARGETPLATFORM" in \
     linux/arm64) apt-get update && apt-get install -y gcc-aarch64-linux-gnu ;; \
     esac || true
 
-# Copy manifests first for dependency caching
-COPY Cargo.toml Cargo.lock ./
-COPY ytdlp-cli/Cargo.toml ytdlp-cli/
-COPY ytdlp-proto/Cargo.toml ytdlp-proto/
-COPY ytdlp-extractor/Cargo.toml ytdlp-extractor/
-COPY ytdlp-extractors/Cargo.toml ytdlp-extractors/
-COPY ytdlp-downloader/Cargo.toml ytdlp-downloader/
-COPY ytdlp-net/Cargo.toml ytdlp-net/
-COPY ytdlp-postproc/Cargo.toml ytdlp-postproc/
-COPY ytdlp-server/Cargo.toml ytdlp-server/
+# prost-build's build.rs needs `protoc` to compile the .proto. CI installs
+# protobuf-compiler explicitly; the Dockerfile previously relied on a
+# leftover binary that no longer ships in rust:1.94.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        protobuf-compiler \
+    && rm -rf /var/lib/apt/lists/*
 
-# Create dummy source files for dependency compilation
-RUN mkdir -p ytdlp-cli/src ytdlp-proto/src ytdlp-extractor/src \
-    ytdlp-extractors/src ytdlp-downloader/src ytdlp-net/src \
-    ytdlp-postproc/src ytdlp-server/src
-
-# Build dependencies only (cached layer)
-RUN cargo build --release --workspace
-
-# Copy source code
+# Copy entire source (target/ excluded via .dockerignore). The previous
+# Dockerfile attempted a manifest-only dep-cache trick, but its stub
+# build cached our own crates' .rlibs with empty contents, which then
+# poisoned the real build's incremental detection and produced
+# `unresolved imports ytdlp_extractor::Extractor` at link time. Simpler
+# and reliable: just compile the workspace once from real source.
 COPY . .
 
 # Build the server
@@ -58,11 +56,15 @@ RUN useradd -m -u 1000 -s /bin/bash appuser
 
 WORKDIR /app
 
-# Copy the built server binary
+# Copy the built server binary. The original Dockerfile also did a
+# `COPY --chown=appuser:appuser . /app/` here, but the source tree
+# contains a `ytdlp-server/` directory that collides with the
+# `/app/ytdlp-server` binary above, producing
+# `cannot copy to non-directory` during the runtime stage. The binary
+# is the only artifact the entrypoint needs; the source copy was dead
+# weight.
 COPY --from=builder /build/target/release/ytdlp-server /app/ytdlp-server
-
-# Copy config directory (if exists) and entrypoint
-COPY --chown=appuser:appuser . /app/
+RUN chown appuser:appuser /app/ytdlp-server
 
 # Switch to non-root user
 USER appuser

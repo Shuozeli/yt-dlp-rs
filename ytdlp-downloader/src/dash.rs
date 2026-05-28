@@ -107,11 +107,9 @@ fn parse_mpd(manifest: &str) -> anyhow::Result<DashManifest> {
                     }
                 }
             }
-            Ok(Event::Text(e)) => {
-                if in_base_url {
-                    base_url = e.unescape().unwrap_or_default().to_string();
-                    in_base_url = false;
-                }
+            Ok(Event::Text(e)) if in_base_url => {
+                base_url = e.unescape().unwrap_or_default().to_string();
+                in_base_url = false;
             }
             Ok(Event::End(e)) => {
                 let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
